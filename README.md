@@ -15,7 +15,7 @@
 
 # 디스코드 접속
 
-https://discord.gg/A2kAPbw
+https://discord.gg/3ZUDYx4 (10회 사용 후 만료되는 초대링크입니다. 접속이 안 되면 꽉 찬 것입니다)
 
 해당 디스코드에서 APIKEY를 발급받아야지 이용이 가능합니다.
 
