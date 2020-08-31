@@ -1,0 +1,110 @@
+[
+  {
+    "id":"extras",
+    "label":"Find trailers and extras automatically (Plex Pass required)",
+    "type":"bool",
+    "default":"true"
+  },
+  {
+    "id": "native_subs",
+    "label": "Include extras with subtitles in Library language",
+    "type": "bool",
+    "default": "false"
+  },
+  {
+    "id": "server_base_url",
+    "label": "\n_____________________________________________________________________________________서버 주소. (제일 뒤 슬래시는 지워주세요),",
+    "type": "text",
+    "default": ""
+  },
+  {
+    "id": "apikey",
+    "label": "APIKEY. Discord에서 발급 받을 것",
+    "type": "text",
+    "default": ""
+  },
+  {
+    "id": "advanced_tvdb_searching",
+    "label": "확장된 TVDB 서칭 사용. (SERVER_SIDE)",
+    "type": "bool",
+    "default": "true"
+  },
+  {
+    "id": "jaro_value",
+    "label": "\n_____________________________________________________________________________________\n문자열 비교값. 낮을수록 정확히 매칭될 확률이 낮다. (SERVER_SIDE)",
+    "type": "text",
+    "default": "0.7"
+  },
+  {
+    "id": "prefer_onnada_character",
+    "label": "애니메이션 : 온나다에서 제공하는 캐릭터 정보 선호 (SERVER_SIDE)",
+    "type": "bool",
+    "default": "true"
+  },
+  {
+    "id": "tvdb_korean_prefer",
+    "label": "애니메이션 : tvdb쪽에 한국어 시리즈 플롯이 있다면 온나다 시리즈 플롯보다 TVDB 한국어 플롯을 선호\n_____________________________________________________________________________________",
+    "type": "bool",
+    "default": "true"
+  },
+  {
+    "id": "english_title_search_daum",
+    "label": "시리즈 제목이 한국어가 아닌 경우 다음에서 검색후 방송명과 비교하여 매칭.",
+    "type": "bool",
+    "default": "true"
+  },
+  {
+    "id": "role_reverse",
+    "label": "캐릭터 이름과 성우 이름의 배치를 역전 (성우가 아닌 캐릭터 이름으로 나타남)",
+    "type": "bool",
+    "default": "true"
+  },
+  {
+    "id": "translate",
+    "label": "플롯(에피소드 플롯 포함)이 한국어로 TVDB에 없으면 강제 번역 (SERVER_SIDE)",
+    "type": "bool",
+    "default": "true"
+  },
+  {
+    "id": "translate_original_with_bracket",
+    "label": "플롯(에피소드 플롯 포함)을 번역한 경우 아래에 기존(원어) 플롯을 병기 (SERVER_SIDE)",
+    "type": "bool",
+    "default": "false"
+  },
+  {
+    "id": "translate_episode_title",
+    "label": "각 에피소드 타이틀에 한국어가 없으면 강제 번역 (SERVER_SIDE)",
+    "type": "bool",
+    "default": "true"
+  },
+  {
+    "id": "actor_translate",
+    "label": "배우 이름(혹은 성우 이름)과 맡은 역할(배역) 이름 번역",
+    "type": "enum",
+    "values": [
+      "No",
+      "Only Actor",
+      "Only Role",
+      "Actor and Role"
+    ],
+    "default": "Actor and Role"
+  },
+  {
+    "id": "translate_episode_title_including_original",
+    "label": "타이틀의 원어를 번역 결과물 오른쪽에 괄호 안에 병기_____________________________________________________________________________________\n",
+    "type": "bool",
+    "default": "true"
+  },
+  {
+    "id": "season_episode_calculator",
+    "label": "원피스 - 808화 등의 매칭 안 되는 에피소드는 TVDB에 맞춰서 absolute numbering 으로 메타데이터 받아옴 (ex : 원피스 - 935화 > 원피스 S21E44 의 데이터 받아옴)",
+    "type": "bool",
+    "default": "true"
+  },
+  {
+    "id": "season_episode_calculator_ids",
+    "label": "위 설정에서 메타데이터를 받아올 TVDB의 ID를 입력. 쉼표로 구분. 81797 원피스 , 72454 코난",
+    "type": "text",
+    "default": "81797,72454"
+  }
+]
