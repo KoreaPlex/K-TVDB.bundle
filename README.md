@@ -34,4 +34,4 @@ APIKEY는 상주하는 봇에게 DM(다이렉트 메시지)으로 '!키발급' �
 
 ![image](https://user-images.githubusercontent.com/70357228/91737221-c39d6180-ebe9-11ea-8546-817bf590c6d8.png)
 
-![image](https://user-images.githubusercontent.com/70357228/91737266-d152e700-ebe9-11ea-8445-535d6f255ea5.png)
+![image](https://user-images.githubusercontent.com/70357228/91737520-25f66200-ebea-11ea-84ce-bf5c479e8282.png)
