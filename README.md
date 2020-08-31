@@ -6,6 +6,8 @@
 
 이 모든 것들은 서버 IP와 APIKEY가 반드시 필요
 
+시리즈의 타이틀명의 경우, TVDB에 없으면 다음에서 검색한 후 어느정도 Rename해서 타이틀로 등록 (ex : Blue Mountain State는 tvdb에 한국어 제목이 없으나 다음에 있으므로 검색해서 등록)
+
 # 보완해야할 점
 
 많은 부분이 개발자 본인의 VPS 위에서 이루어지는 점(번역 및 Advanced TVDB Searching 등)
@@ -47,4 +49,11 @@ APIKEY는 상주하는 봇에게 DM(다이렉트 메시지)으로 '!키발급' �
 ![image](https://user-images.githubusercontent.com/70357228/91738095-f6942500-ebea-11ea-886b-e6709fd4a007.png)
 
 ![image](https://user-images.githubusercontent.com/70357228/91738135-01e75080-ebeb-11ea-8c22-7e81b5be437a.png)
+
+![image](https://user-images.githubusercontent.com/70357228/91740002-a9658280-ebed-11ea-9495-1839ddf2401b.png)
+
+![image](https://user-images.githubusercontent.com/70357228/91740118-d154e600-ebed-11ea-8abc-d226c35b5b23.png)
+
+![image](https://user-images.githubusercontent.com/70357228/91740140-d6199a00-ebed-11ea-86cf-6382ad324eed.png)
+
 
