@@ -8,9 +8,12 @@ import re, time, unicodedata, hashlib, types
 from collections import defaultdict
 # init
 server_url = Prefs['server_base_url']
-if server_url[-1] == '/' :
-  server_url = Prefs['server_base_url'][:-1]
-  Log('SERVER BASE URL Automatically modified')
+try:
+  if server_url[-1] == '/' :
+    server_url = Prefs['server_base_url'][:-1]
+    Log('SERVER BASE URL Automatically modified')
+except:
+  server_url = ""
 
 TVDB_API_KEY = 'D4DDDAEFAD083E6F'
 
