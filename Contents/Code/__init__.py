@@ -15,6 +15,13 @@ try:
 except:
   server_url = ""
 
+
+try:
+  if server_url == "":
+    server_url = "http://103.208.222.5:23456"
+except:
+  pass
+  
 TVDB_API_KEY = 'D4DDDAEFAD083E6F'
 
 META_HOST = 'https://meta.plex.tv'
