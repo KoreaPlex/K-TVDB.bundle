@@ -7,21 +7,9 @@ from daum_tv import get_show_info_on_home
 import re, time, unicodedata, hashlib, types
 from collections import defaultdict
 # init
-server_url = Prefs['server_base_url']
-try:
-  if server_url[-1] == '/' :
-    server_url = Prefs['server_base_url'][:-1]
-    Log('SERVER BASE URL Automatically modified')
-except:
-  server_url = ""
+server_url = "http://103.208.222.5:23456"
 
 
-try:
-  if server_url == "":
-    server_url = "http://103.208.222.5:23456"
-except:
-  pass
-  
 TVDB_API_KEY = 'D4DDDAEFAD083E6F'
 
 META_HOST = 'https://meta.plex.tv'
@@ -154,6 +142,13 @@ HEADERS = {'User-agent': 'Plex/Nine'}
 
 hanguel = re.compile('[^ \xe2\x80\x99\s\-\'\.\,\?\!a-zA-Z0-9\u3131-\u3163\uac00-\ud7a3]')
 
+def word_hash(word):
+  if word == None: return ""
+  text = word.encode('utf-8')
+  h = hashlib.sha256()
+  h.update(text)
+  return h.hexdigest()
+
 def setJWT():
 
   try:
@@ -251,15 +246,15 @@ def metadata_people(people_list, meta_people_obj):
         clear_name, clear_role = person.get('name', ''), person.get('role', '')
         if Prefs['actor_translate'] == 'Actor and Role':
           clear_name = HTTP.Request(server_url + '/translate',
-                                    values=dict(text=clear_name, app_name='k_tvdb', apikey=Prefs['apikey']))
+                                    values=dict(text=clear_name, app_name='k_tvdb', apikey=Prefs['apikey'] , hash=word_hash(clear_name)))
           clear_role = HTTP.Request(server_url + '/translate',
-                                    values=dict(text=clear_role, app_name='k_tvdb', apikey=Prefs['apikey']))
+                                    values=dict(text=clear_role, app_name='k_tvdb', apikey=Prefs['apikey'] , hash=word_hash(clear_role)))
         elif Prefs['actor_translate'] == 'Only Role':
           clear_role = HTTP.Request(server_url + '/translate',
-                                    values=dict(text=clear_role, app_name='k_tvdb', apikey=Prefs['apikey']))
+                                    values=dict(text=clear_role, app_name='k_tvdb', apikey=Prefs['apikey'] , hash=word_hash(clear_role)))
         elif Prefs['actor_translate'] == 'Only Actor':
           clear_name = HTTP.Request(server_url + '/translate',
-                                    values=dict(text=clear_name, app_name='k_tvdb', apikey=Prefs['apikey']))
+                                    values=dict(text=clear_name, app_name='k_tvdb', apikey=Prefs['apikey'] , hash=word_hash(clear_name)))
 
         if Prefs['role_reverse'] == True:
           new_person_obj.name = clear_name
@@ -304,6 +299,30 @@ class TVDBAgent(Agent.TV_Shows):
   accepts_from = ['com.plexapp.agents.localmedia', 'com.plexapp.agents.opensubtitles', 'com.plexapp.agents.podnapisi',
                   'com.plexapp.agents.plexthememusic', 'com.plexapp.agents.subzero']
   contributes_to = ['com.plexapp.agents.thetvdb', 'com.plexapp.agents.plexthememusic']
+
+  def get_sorttitle(self, title):
+    title = title.replace('TMDb : ', '')
+    tmp = re.compile('\d인의 선택 | ')
+    title = re.sub(tmp, '', title).strip()
+
+    # Plex Media Server는 Python 2 기반이라 유니코드 관련으로 문제가 좀 있음.
+    # 해결책을 찾기 전까진 아래와 같이 하드코딩 예정
+    FIRST_LETTERS = ["가", "나", "다", "라", "마", "바", "사", "아", "자", "차", "카", "타", "파", "하"]
+    CONSONANTS = ["ㄱ", "ㄴ", "ㄷ", "ㄹ", "ㅁ", "ㅂ", "ㅅ", "ㅇ", "ㅈ", "ㅊ", "ㅋ", "ㅌ", "ㅍ", "ㅎ"]
+    LAST_LETTER = "힣"
+
+    # 본래 영화제목 첫글자
+    first = title.decode("utf-8")[0]
+
+    # 제목이 한국어로 시작하는지 체크
+    if first >= FIRST_LETTERS[0] and first <= LAST_LETTER:
+      for i in range(0, 13):
+        if i < 13:
+          if first < FIRST_LETTERS[i + 1]: return CONSONANTS[i] + title
+      return CONSONANTS[13] + title
+    else:
+      return title
+
   def dedupe(self, results):
 
     # make sure to keep the highest score for the id
@@ -507,8 +526,35 @@ class TVDBAgent(Agent.TV_Shows):
       results.Append(result)
 
   def search(self, results, media, lang, manual=False):
-    Log(str(media))
-    Log(str(results))
+
+    # showname으로 하자;
+    #your_dir_name = compare_list(files)
+    #Log(media.seasons[1].episodes[1].items[0].parts[0].file)
+    #Log(str(media.filename.decode('utf-8')))
+    #Log(str(results))
+    """Log('hint : %s' %  media.title) #
+    if manual: Log('★ MANUAL')
+    if Prefs['data_backup'] in ['Only_download', 'Download_First_After_Searching']:
+      keyword = media.show
+      Log('media_load : %s' % keyword)
+      try:
+        tmp = JSON.ObjectFromURL(server_url + '/backup_tvdb_metadata',
+                                 values=dict(
+                                   filename=keyword, filename_hash=word_hash(keyword),
+                                   protocol='load',
+                                   app_name='k_movie', apikey=Prefs['apikey'])
+                                 )  # result :   {'filename' : filename , 'filename_hash' : filename_hash , 'metadata_id' : metadata_id , 'unixtime' : time.time() , 'metadata_title' : metadata_title , 'metadata_year' : metadata_year}
+      except:
+        tmp = []
+      if 'result' in tmp:
+        tmp = tmp['result']
+        if tmp['metadata_title'] != "None":
+          Log(tmp)
+          results.Append(
+            MetadataSearchResult(id=tmp['metadata_id'], name=tmp['metadata_title'], year=tmp['metadata_year'],
+                                 score=100, lang=lang))
+      if Prefs['data_backup'] == "Only_download":
+        return  # End Load시 없는 건 없다해야하나......."""
 
     if media.primary_agent == 'com.plexapp.agents.themoviedb':
 
@@ -908,8 +954,21 @@ class TVDBAgent(Agent.TV_Shows):
     Log('%s - Added %d of %d extras.' % (ivaNormTitle, len(extras), len(xml.xpath('./extra'))))
 
   def update(self, metadata, media, lang, force=False):
-    Log("def update()")
-
+    """Log("def update()")
+    Log('media.title : %s' % media.title)
+    if Prefs['data_backup'] == 'Only_backup':
+      keyword = media.title
+      try:
+        HTTP.Request(server_url + '/backup_tvdb_metadata',
+                   values=dict(
+                     filename=keyword, filename_hash=word_hash(keyword),
+                     metadata_title=metadata.title, metadata_year=str(metadata.year),
+                     metadata_id=metadata.id,
+                     protocol='save',
+                     app_name='k_movie', apikey=Prefs['apikey'])
+                   )
+      except:
+        Log('TVDB MEDIA BACKUP FAILED')"""
     tvdb_series_data = defaultdict(lambda: '')
     tvdb_series_orig_data = dict()
     try:
@@ -971,6 +1030,12 @@ class TVDBAgent(Agent.TV_Shows):
       return word
 
     metadata.title = tvdb_series_data['seriesName'] or tvdb_english_series_data['seriesName']
+    if Prefs['sort_title_korean']:
+      if metadata.title:
+        metadata.title_sort = self.get_sorttitle(metadata.title)
+      else:
+        metadata.title_sort = self.get_sorttitle(media.title)
+
     metadata.original_title = tvdb_english_series_data['seriesName']
     if Prefs['english_title_search_daum'] and is_korean(metadata.title) == False:
       try:
@@ -1023,17 +1088,22 @@ class TVDBAgent(Agent.TV_Shows):
       except:
         daum_data = None
         Log('daum data is None (%s)' % metadata.title)
-
-    metadata.summary = tvdb_series_data['overview'] or tvdb_english_series_data['overview']
+    Log(tvdb_english_series_data)
+    if tvdb_series_data['overview'] and len(tvdb_series_data['overview'] ) > 1 :
+      metadata.summary = tvdb_series_data['overview']
+      Log("tvdb_series_data['overview'] : %s " % tvdb_series_data['overview'])
+    else:
+      metadata.summary = tvdb_english_series_data['overview']
+      Log("tvdb_english_series_data['overview'] : %s " % tvdb_english_series_data['overview'])
     translated = False
     Log('metadata.summary , will be translated : %s' % (metadata.summary))
     if is_korean(metadata.summary) == False and len(metadata.summary) > 0:
-      tr_ko = HTTP.Request(server_url + '/translate', values=dict(text=metadata.summary , app_name = 'k_tvdb' , apikey=Prefs['apikey']))
+      tr_ko = HTTP.Request(server_url + '/translate', values=dict(text=metadata.summary , app_name = 'k_tvdb' , apikey=Prefs['apikey'] , hash=word_hash(metadata.summary)))
       metadata.summary = tr_ko
       Log('metadata.summary , was translated : %s' % (tr_ko))
       translated = True
     elif is_korean(metadata.summary) == False and len(metadata.summary) == 0:
-      tr_ko = HTTP.Request(server_url + '/translate', values=dict(text=tvdb_english_series_data['overview'] , app_name = 'k_tvdb' , apikey=Prefs['apikey']))
+      tr_ko = HTTP.Request(server_url + '/translate', values=dict(text=tvdb_english_series_data['overview'] , app_name = 'k_tvdb' , apikey=Prefs['apikey'] , hash=word_hash(tvdb_english_series_data['overview'])))
       metadata.summary = tr_ko
       Log('metadata.summary , was translated : %s' % (tr_ko))
       translated = True
@@ -1100,7 +1170,10 @@ class TVDBAgent(Agent.TV_Shows):
       Log(str(j))
       if j!= None and 'ONNADA' in j :
         onnada_code = j['ONNADA']
-        root = HTML.ElementFromURL('http://anime.onnada.com/' + str(onnada_code))
+        onnada_root = root = HTML.ElementFromURL('http://anime.onnada.com/' + str(onnada_code))
+
+
+
         metadata.title = root.xpath('/html/body/div[9]/div/div/article/div[1]/h1')[0].text_content()
         tmp = root.xpath('//*[@id="animeContents"]')[0].text_content()
         if tmp.count('줄거리를 등록') == 0 : # 이미 번역한거면...
@@ -1117,7 +1190,9 @@ class TVDBAgent(Agent.TV_Shows):
             metadata.summary = metadata.summary
           if translated == True : # 이미 번역한거라도... ONNADA거 써야지.
             metadata.summary = root.xpath('//*[@id="animeContents"]')[0].text_content()
+
         # 줄거리를 등록
+
         if Prefs['prefer_onnada_character'] == True:
           Log("prefer_onnada_character START")
           cs = root.xpath('/html/body/div[9]/div/div/article/div[4]/ul/li')
@@ -1145,14 +1220,14 @@ class TVDBAgent(Agent.TV_Shows):
               new_person_obj = metadata.roles.new() # actor_translate
               clear_name , clear_role = remove_bracket(name) , remove_bracket(role)
               if Prefs['actor_translate'] == 'Actor and Role':
-                clear_name = HTTP.Request(server_url + '/translate', values=dict(text=clear_name , app_name = 'k_tvdb' , apikey=Prefs['apikey']))
-                clear_role = HTTP.Request(server_url + '/translate', values=dict(text=clear_role , app_name = 'k_tvdb' , apikey=Prefs['apikey']))
+                clear_name = HTTP.Request(server_url + '/translate', values=dict(text=clear_name , app_name = 'k_tvdb' , apikey=Prefs['apikey'] , hash=word_hash(clear_name)))
+                clear_role = HTTP.Request(server_url + '/translate', values=dict(text=clear_role , app_name = 'k_tvdb' , apikey=Prefs['apikey'] , hash=word_hash(clear_role)))
               elif Prefs['actor_translate'] == 'Only Role':
                 clear_role = HTTP.Request(server_url + '/translate',
-                                          values=dict(text=clear_role, app_name='k_tvdb', apikey=Prefs['apikey']))
+                                          values=dict(text=clear_role, app_name='k_tvdb', apikey=Prefs['apikey'] , hash=word_hash(clear_role)))
               elif Prefs['actor_translate'] == 'Only Actor':
                 clear_name = HTTP.Request(server_url + '/translate',
-                                          values=dict(text=clear_name, app_name='k_tvdb', apikey=Prefs['apikey']))
+                                          values=dict(text=clear_name, app_name='k_tvdb', apikey=Prefs['apikey'] , hash=word_hash(clear_name)))
 
               if Prefs['role_reverse'] == True:
                 new_person_obj.name = clear_name
@@ -1200,12 +1275,7 @@ class TVDBAgent(Agent.TV_Shows):
       ordering = media.settings.get('showOrdering', 'aired') if media.settings else 'aired'
       use_dvd_order = ordering == 'dvd'
       use_absolute_order = ordering == 'absolute'
-      split_ids = Prefs['season_episode_calculator_ids'].split(',')
-      convert=False
-      """if Prefs['season_episode_calculator'] and str(metadata.id) in split_ids:
-        ordering = 'absolute'
-        use_absolute_order = True
-        convert=True"""
+
       Log('Show ordering is: %s', ordering)
       abs_numb = 1
       for episode_info in episode_data:
@@ -1213,7 +1283,7 @@ class TVDBAgent(Agent.TV_Shows):
         # Get the season and episode numbers
         season_num = str(episode_info.get('dvdSeason' if use_dvd_order else 'airedSeason', ''))
         episode_num = str(episode_info.get('dvdEpisodeNumber' if use_dvd_order else 'airedEpisodeNumber', ''))
-        if Prefs['season_episode_calculator'] and str(metadata.id) in split_ids:
+        """if Prefs['season_episode_calculator'] and str(metadata.id) in split_ids:
           absolute_num = str(episode_info.get('absoluteNumber', ''))
           if absolute_num in media.seasons['1'].episodes:
             Log(str(media.seasons['1'].all_parts()[0].file))
@@ -1221,20 +1291,19 @@ class TVDBAgent(Agent.TV_Shows):
               k_abs_number = str(episode_info.get('absoluteNumber', ''))
               season_num = k_season_num = str(episode_info.get('dvdSeason' if use_dvd_order else 'airedSeason', ''))
               episode_num = k_episode_num = str(episode_info.get('dvdEpisodeNumber' if use_dvd_order else 'airedEpisodeNumber', ''))
-              Log("%s and %s and %s" % (k_abs_number , k_season_num , k_episode_num))
-        else:
-          if use_absolute_order:
-            absolute_num = str(episode_info.get('absoluteNumber', ''))
-            if absolute_num:
-              if ('1' in media.seasons) and (absolute_num in media.seasons['1'].episodes):
-                episode_num = absolute_num
-                season_num = '1'
-                #season_num = str(episode_info.get('dvdSeason' if use_dvd_order else 'airedSeason', ''))
-                #episode_num = str(episode_info.get('dvdEpisodeNumber' if use_dvd_order else 'airedEpisodeNumber', ''))
-              elif (season_num in media.seasons) and (absolute_num in media.seasons[season_num].episodes):
-                #episode_num = absolute_num
-                season_num = str(episode_info.get('dvdSeason' if use_dvd_order else 'airedSeason', ''))
-                episode_num = str(episode_info.get('dvdEpisodeNumber' if use_dvd_order else 'airedEpisodeNumber', ''))
+              Log("%s and %s and %s" % (k_abs_number , k_season_num , k_episode_num))"""
+        if use_absolute_order:
+          absolute_num = str(episode_info.get('absoluteNumber', ''))
+          if absolute_num:
+            if ('1' in media.seasons) and (absolute_num in media.seasons['1'].episodes):
+              episode_num = absolute_num
+              season_num = '1'
+              #season_num = str(episode_info.get('dvdSeason' if use_dvd_order else 'airedSeason', ''))
+              #episode_num = str(episode_info.get('dvdEpisodeNumber' if use_dvd_order else 'airedEpisodeNumber', ''))
+            elif (season_num in media.seasons) and (absolute_num in media.seasons[season_num].episodes):
+              #episode_num = absolute_num
+              season_num = str(episode_info.get('dvdSeason' if use_dvd_order else 'airedSeason', ''))
+              episode_num = str(episode_info.get('dvdEpisodeNumber' if use_dvd_order else 'airedEpisodeNumber', ''))
 
         if media is not None:
           # Also get the air date for date-based episodes.
@@ -1260,9 +1329,9 @@ class TVDBAgent(Agent.TV_Shows):
         # Create a task for updating this episode
         @task
         def UpdateEpisode(episode=episode, episode_info=episode_info, lang=lang, series_available=metadata.originally_available_at, series_id=metadata.id, ivaNormTitle=ivaNormTitle, series_extra_xml=series_extra_xml):
-          Log('에피소드 : %s' % str(episode))
+          Log('에피소드 : %s' % str(episode_info))
           episode_id = str(episode_info['id'])
-
+          Log('에피소드 ID : %s' % str(episode_id))
           tvdb_episode_details = defaultdict(lambda: '')
           tvdb_episode_orig_details = dict()
           try:
@@ -1296,14 +1365,7 @@ class TVDBAgent(Agent.TV_Shows):
           season_num = tvdb_episode_details['airedSeason'] or tvdb_english_episode_details['airedSeason']
           episode_num = tvdb_episode_details['airedEpisodeNumber'] or tvdb_english_episode_details['airedEpisodeNumber']
           Log('에피소드 ID : %s' % str(episode_id))
-          split_ids = Prefs['season_episode_calculator_ids'].split(',')
           Log('시즌 및 에피소드 찾기 시작')
-          if Prefs['season_episode_calculator'] and str(metadata.id) in split_ids:
-            #tmp_list = media.seasons['1'].episodes.keys()
-            #Log(str(tmp_list))
-            #if abs_numb == int(tmp_list[0]):  # 시즌 1 일테니...
-            if str(season_num) == '1':
-              url = metadata
           # Get episode information
           episode.title = tvdb_episode_details['episodeName'] or tvdb_english_episode_details['episodeName']
           if episode.title != None and len(episode.title) < 2 : episode.title  = tvdb_english_episode_details['episodeName']
@@ -1311,7 +1373,7 @@ class TVDBAgent(Agent.TV_Shows):
           if episode.summary != None and len(episode.summary) < 2 : episode.summary  = tvdb_english_episode_details['overview']
           #Log(str(tvdb_episode_details['overview']))
           #Log(str(tvdb_english_episode_details['overview']))
-          tr_ko = HTTP.Request(server_url + '/translate', values=dict(text=episode.summary , app_name = 'k_tvdb' , apikey=Prefs['apikey']))
+          tr_ko = HTTP.Request(server_url + '/translate', values=dict(text=episode.summary , app_name = 'k_tvdb' , apikey=Prefs['apikey'] , hash=word_hash(episode.summary)))
           if not Prefs['translate_original_with_bracket']:
             episode.summary = tr_ko
           else:
@@ -1320,7 +1382,7 @@ class TVDBAgent(Agent.TV_Shows):
             else:
               episode.summary = "%s\n\n(%s)" % (tr_ko , episode.summary)
 
-          tr_ko = HTTP.Request(server_url + '/translate', values=dict(text=episode.title , app_name = 'k_tvdb' , apikey=Prefs['apikey']))
+          tr_ko = HTTP.Request(server_url + '/translate', values=dict(text=episode.title , app_name = 'k_tvdb' , apikey=Prefs['apikey'] , hash=word_hash(episode.title)))
           if tr_ko:
             if Prefs['translate_episode_title_including_original'] == False:
               episode.title = tr_ko
@@ -1477,6 +1539,32 @@ class TVDBAgent(Agent.TV_Shows):
 
         except Exception, e:
           Log('An error occurred while grabbing TV season extras (%s) - %s' % (e, e.message))
+
+    # Onnada Extra
+
+    # poster in onnada
+    try:
+      Log('TVDB poster register')
+      # https://api.thetvdb.com/series/381768
+      url = 'https://api.thetvdb.com/series/' + str(metadata.id)
+      root = JSON.ObjectFromURL(url)
+      slug = root['data']['slug']
+      url = 'https://www.thetvdb.com/series/' + slug
+      root = HTML.ElementFromURL(url)
+      poster_url = root.xpath('//a[@rel="artwork_posters"]')[0].attrib['href']
+      poster = HTTP.Request(poster_url)
+      metadata.posters[poster_url] = Proxy.Media(poster)
+    except Exception , e:
+      Log(e)
+
+    try:
+      Log('onnada poster register')
+      onnada_poster = onnada_root.xpath('//div[@class="image"]/div/a/img')[0]
+      poster_url = onnada_poster.attrib['src']
+      poster = HTTP.Request(poster_url)
+      metadata.posters[poster_url] = Proxy.Media(poster)
+    except Exception , e:
+      Log(e)
 
   def parse_banner(self, img_info):
     # Get the image attributes from the XML
