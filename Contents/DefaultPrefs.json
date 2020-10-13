@@ -96,15 +96,9 @@
     "default": "true"
   },
   {
-    "id": "season_episode_calculator",
-    "label": "원피스 - 808화 등의 매칭 안 되는 에피소드는 TVDB에 맞춰서 absolute numbering 으로 메타데이터 받아옴 (ex : 원피스 - 935화 > 원피스 S21E44 의 데이터 받아옴)",
+    "id": "sort_title_korean",
+    "label": "한국어 sort_title (ㄱ , ㄴ, ㄷ . ....)",
     "type": "bool",
     "default": "true"
   },
-  {
-    "id": "season_episode_calculator_ids",
-    "label": "위 설정에서 메타데이터를 받아올 TVDB의 ID를 입력. 쉼표로 구분. 81797 원피스 , 72454 코난",
-    "type": "text",
-    "default": "81797,72454"
-  }
 ]
