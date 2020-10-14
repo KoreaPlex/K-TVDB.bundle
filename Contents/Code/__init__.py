@@ -362,6 +362,10 @@ class TVDBAgent(Agent.TV_Shows):
           try:
             series_data = JSON.ObjectFromString(GetResultFromNetwork(TVDB_SERIES_URL % (guid, lang), additionalHeaders={'Accept-Language': lang}))['data']
             name = series_data['seriesName']
+            isMultiseaseon = False
+            if Prefs['multiseason_throw_away_onnada_title'] : # 멀티시즌인지 따질 필요가 있다면,
+              if series_data['season'] not in ['1' , '0']:
+                isMultiseaseon = True
 
             if '403: series not permitted' in name.lower():
               continue
@@ -1037,7 +1041,7 @@ class TVDBAgent(Agent.TV_Shows):
         metadata.title_sort = self.get_sorttitle(media.title)
 
     metadata.original_title = tvdb_english_series_data['seriesName']
-    if Prefs['english_title_search_daum'] and is_korean(metadata.title) == False:
+    if Prefs['english_title_search_daum'] and is_korean(metadata.title) == False :
       try:
         daum_data = find_title_in_daum(metadata.title)
         if 'studio' in daum_data:
@@ -1171,10 +1175,13 @@ class TVDBAgent(Agent.TV_Shows):
       if j!= None and 'ONNADA' in j :
         onnada_code = j['ONNADA']
         onnada_root = root = HTML.ElementFromURL('http://anime.onnada.com/' + str(onnada_code))
-
-
-
-        metadata.title = root.xpath('/html/body/div[9]/div/div/article/div[1]/h1')[0].text_content()
+        if Prefs['multiseason_throw_away_onnada_title'] : # 다시즌제 버리기 선호
+          if isMultiseaseon: # 멀티시즌
+            pass
+          else: # 멀티시즌 아니므로 온나다거 선호
+            metadata.title = root.xpath('/html/body/div[9]/div/div/article/div[1]/h1')[0].text_content()
+        else: # 다시즌제 버리기 비선호 (무조건 온나다거)
+          metadata.title = root.xpath('/html/body/div[9]/div/div/article/div[1]/h1')[0].text_content()
         tmp = root.xpath('//*[@id="animeContents"]')[0].text_content()
         if tmp.count('줄거리를 등록') == 0 : # 이미 번역한거면...
           if Prefs['tvdb_korean_prefer'] and is_korean(metadata.summary) == False:            # 한국어 translate_original_with_bracket
