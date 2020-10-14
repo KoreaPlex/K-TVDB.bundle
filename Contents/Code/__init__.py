@@ -362,10 +362,6 @@ class TVDBAgent(Agent.TV_Shows):
           try:
             series_data = JSON.ObjectFromString(GetResultFromNetwork(TVDB_SERIES_URL % (guid, lang), additionalHeaders={'Accept-Language': lang}))['data']
             name = series_data['seriesName']
-            isMultiseaseon = False
-            if Prefs['multiseason_throw_away_onnada_title'] : # 멀티시즌인지 따질 필요가 있다면,
-              if series_data['season'] not in ['1' , '0']:
-                isMultiseaseon = True
 
             if '403: series not permitted' in name.lower():
               continue
@@ -1034,6 +1030,10 @@ class TVDBAgent(Agent.TV_Shows):
       return word
 
     metadata.title = tvdb_series_data['seriesName'] or tvdb_english_series_data['seriesName']
+    isMultiseaseon = False
+    if Prefs['multiseason_throw_away_onnada_title']:  # 멀티시즌인지 따질 필요가 있다면,
+      if tvdb_series_data['season'] not in ['1', '0']:
+        isMultiseaseon = True
     if Prefs['sort_title_korean']:
       if metadata.title:
         metadata.title_sort = self.get_sorttitle(metadata.title)
@@ -1205,6 +1205,7 @@ class TVDBAgent(Agent.TV_Shows):
           cs = root.xpath('/html/body/div[9]/div/div/article/div[4]/ul/li')
           Log(str(cs))
           if len(cs) != 0 :
+
             metadata.roles.clear()
             if len(cs) > 20:
               cs = cs[:20]
@@ -1212,7 +1213,7 @@ class TVDBAgent(Agent.TV_Shows):
               Log(str(c))
               try:
                 cast_img = c.xpath('div[@class="photo"]/a/img')
-                Log(str(cast_img[0].attrib['title']))
+                #Log(str(cast_img[0].attrib['title']))
                 if len(cast_img) == 1:
                   photo = cast_img[0].attrib['data-original']
                 else:
