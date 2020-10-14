@@ -78,6 +78,12 @@
     "default": "true"
   },
   {
+    "id": "multiseason_throw_away_onnada_title",
+    "label": "다시즌제 애니메이션의 경우 온나다 제목을 버리고 TVDB 타이틀을 표기",
+    "type": "bool",
+    "default": "true"
+  },
+  {
     "id": "actor_translate",
     "label": "배우 이름(혹은 성우 이름)과 맡은 역할(배역) 이름 번역",
     "type": "enum",
